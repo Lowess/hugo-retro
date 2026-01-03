@@ -1,0 +1,129 @@
+################################### Hugo General Configuration ############################
+
+baseURL = ""
+title = "The Retro Museum"
+defaultContentLanguage = "en"
+
+summarylength = "20" # post excert
+googleAnalytics = "" # Ex: UA-123-45
+
+[outputs]
+page = ["HTML", "json"]
+section = ["HTML", "json"]
+home = ["HTML", "json"]
+
+#################################### Plugins ##########################################
+
+[[module.mounts]]
+source = "static/images"
+target = "static/images"
+
+### Hugo retro mounts - Multiple Systems
+# Default system (all ROMs)
+[[module.mounts]]
+  source = '/Users/florian/Workspace/goretro'
+  includeFiles = "gamelist.xml"
+  target = 'data/snes'
+
+[[module.mounts]]
+  source = '/Users/florian/Documents/Roms/neogeo/roms'
+  includeFiles = "gamelist.xml"
+  target = 'data/neogeo'
+
+# Add more systems here as needed
+# Example for SNES:
+# [[module.mounts]]
+#   source = '/path/to/snes/roms'
+#   includeFiles = "gamelist.xml"
+#   target = 'data/snes'
+
+# Mount each system's media to its own subdirectory to avoid conflicts
+[[module.mounts]]
+  source = '/Users/florian/Workspace/goretro/media'
+  target = 'static/media/snes'
+
+[[module.mounts]]
+  source = '/Users/florian/Documents/Roms/neogeo/roms/media'
+  target = 'static/media/neogeo'
+
+###################################### Navigation / Menu ######################################
+
+# Note: System selection is handled by the dropdown in the header
+
+########################### Default parameters ##########################
+[params]
+headerTitle = "The Retro Museum"
+headerSubtitle = "Preserving classic games"
+logo = "/images/favicon.png"
+description = "The Retro Museum"
+author = "Florian Dambrine"
+copyright = "{year}"
+
+# ROM Library Settings
+deduplicateRoms = true  # Remove duplicate ROMs based on name (keeps first occurrence)
+
+# System display names (optional - if not specified, uses directory name)
+# These are friendly names for the system IDs found in data/
+[params.systemNames]
+  all = "All Systems"
+  neogeo = "Neo Geo"
+  snes = "Super Nintendo (SNES)"
+  genesis = "Sega Genesis / Mega Drive"
+  n64 = "Nintendo 64"
+  psx = "PlayStation"
+  gb = "Game Boy"
+  gba = "Game Boy Advance"
+  nes = "Nintendo Entertainment System"
+  arcade = "Arcade"
+
+# System color themes for header gradients
+# Format: "from-color via-color to-color"
+[params.systemColors]
+  all = "from-indigo-600 via-purple-600 to-pink-500"      # Default purple/pink gradient
+  neogeo = "from-blue-600 via-cyan-500 to-teal-500"       # Neo Geo blue/cyan
+  snes = "from-purple-600 via-violet-500 to-purple-400"   # SNES purple
+  genesis = "from-slate-700 via-blue-600 to-slate-800"    # Genesis dark blue/black
+  n64 = "from-red-600 via-blue-600 to-green-600"          # N64 multicolor
+  psx = "from-slate-600 via-gray-700 to-slate-800"        # PlayStation gray
+  gb = "from-gray-500 via-green-600 to-gray-600"          # Game Boy green/gray
+  gba = "from-indigo-500 via-purple-500 to-pink-500"      # GBA purple
+  nes = "from-red-600 via-gray-600 to-red-700"            # NES red/gray
+  arcade = "from-yellow-500 via-orange-500 to-red-600"    # Arcade bright colors
+
+[params.maintenance]
+enable = false
+title = "Maintenance mode"
+message = "Coming back online soon..."
+image = "/images/preact.png"
+
+################################### Languages #####################################
+
+[params.language.dropdown]
+enabled = false
+
+################################### Security configs #####################################
+
+removePathAccents = true
+
+[markup.goldmark.renderer]
+unsafe = true
+
+[security]
+  enableInlineShortcodes = false
+  [security.exec]
+    allow = ['^dart-sass-embedded$', '^go$', '^npx$', '^postcss$', '^babel']
+    osEnv = ['(?i)^(PATH|PATHEXT|APPDATA|TMP|TEMP|TERM)$']
+
+  [security.funcs]
+    getenv = ['^HUGO_']
+
+  [security.http]
+    methods = ['(?i)GET|POST']
+    urls = ['.*']
+
+################################### Build configs #####################################
+
+[build]
+  noJSConfigInAssets = true
+  useResourceCacheWhen = 'fallback'
+  writeStats = false

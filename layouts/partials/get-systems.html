@@ -1,0 +1,40 @@
+{{- /*
+  This partial generates a list of available systems by scanning the data directory.
+  Returns a slice of maps with id, name, icon, and color for each system.
+*/ -}}
+
+{{- $systems := slice -}}
+{{- $systemNames := site.Params.systemNames -}}
+{{- $systemColors := site.Params.systemColors -}}
+
+{{- /* Add "All Systems" as the first option */ -}}
+{{- $allSystemsName := default "All Systems" (index $systemNames "all") -}}
+{{- $allSystemsColor := default "from-indigo-600 via-purple-600 to-pink-500" (index $systemColors "all") -}}
+{{- $allSystem := dict "id" "all" "name" $allSystemsName "icon" "🎮" "color" $allSystemsColor -}}
+{{- $systems = $systems | append $allSystem -}}
+
+{{- /* Iterate through all data directories */ -}}
+{{- range $key, $value := site.Data -}}
+  {{- $systemId := $key -}}
+  {{- $systemName := $systemId -}}
+  {{- $systemColor := "from-indigo-600 via-purple-600 to-pink-500" -}}
+
+  {{- /* Check if there's a friendly name configured */ -}}
+  {{- if isset $systemNames $systemId -}}
+    {{- $systemName = index $systemNames $systemId -}}
+  {{- else -}}
+    {{- /* Capitalize first letter if no friendly name */ -}}
+    {{- $systemName = $systemId | title -}}
+  {{- end -}}
+
+  {{- /* Check if there's a color scheme configured */ -}}
+  {{- if isset $systemColors $systemId -}}
+    {{- $systemColor = index $systemColors $systemId -}}
+  {{- end -}}
+
+  {{- /* Create system object */ -}}
+  {{- $system := dict "id" $systemId "name" $systemName "icon" "🎮" "color" $systemColor -}}
+  {{- $systems = $systems | append $system -}}
+{{- end -}}
+
+{{- return $systems -}}

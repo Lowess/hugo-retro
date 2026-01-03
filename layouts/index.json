@@ -1,0 +1,2 @@
+{{ $games := (index $.Site.Data.all "gamelist").game }}
+{{ $games | jsonify }}

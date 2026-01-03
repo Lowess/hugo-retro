@@ -1,0 +1,34 @@
+{{- $script := .widget }}
+{{- $data := .data }}
+{{ $id := printf "preact-%d" now.UnixNano }}
+
+<div id="root" class="{{ $id }}">
+  {{- "<!-- Preact component -->" | safeHTML }}
+
+  <div class="flex items-center justify-center py-12">
+    <div class="loader">
+      <div class="lds-facebook">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+  </div>
+
+  {{ with $script.css -}}
+  <link href="{{ relURL . }}" rel="stylesheet" />
+  {{- end }}
+
+  {{ with $script.js -}}
+  <!-- Preact Data provided as JSON props  -->
+  {{ with $data -}}
+  <script type="text/props" data-island-props=".{{ $id }}">
+    {{.}}
+  </script>
+  {{- end }}
+
+  <!-- Load the built Vite asset -->
+  {{ $widgetName := . | replaceRE "^js/(.+)\\.tsx$" "$1" | lower }}
+  <script async type="module" src="/assets/js/{{ $widgetName }}.js?mount_at=.{{ $id }}"></script>
+  {{- end }}
+</div>

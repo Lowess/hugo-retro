@@ -1,0 +1,5 @@
+# Hugo template files should not be auto-formatted
+layouts/**/*.html
+
+# Keep Hugo config files as-is
+*.toml

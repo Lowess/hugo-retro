@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="{{ with site.LanguageCode }}{{ . }}{{ else }}en-US{{ end }}">
+  {{- template "_internal/head.html" . -}}
+
+  <body id="body" class="flex flex-col min-h-screen bg-gray-950">
+    <!-- Inject Hugo config data for JavaScript -->
+    {{- $systems := partial "get-systems.html" . -}}
+    <script>
+      window.__HUGO_SYSTEMS__ = {{ $systems | jsonify | safeJS }};
+    </script>
+
+    {{ if .Site.Params.maintenance.enable }} {{- partial "maintenance.html" .
+    -}} {{ else }} {{- template "_internal/header.html" . -}}
+
+    <main class="flex-grow bg-gray-900">{{- block "main" . }}{{- end }}</main>
+
+    {{- template "_internal/footer.html" . -}} {{- end }}
+  </body>
+</html>

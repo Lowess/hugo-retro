@@ -1,0 +1,49 @@
+<head>
+  <meta charset="utf-8" />
+  <title>{{ .Title }}</title>
+
+  {{ "<!-- Mobile responsive meta -->" | safeHTML }}
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  />
+  <meta
+    name="description"
+    content="{{ with .Description }}{{ . }}{{ else }}{{ with site.Params.description }}{{ . }}{{ end }}{{ end }}"
+  />
+
+  {{ "<!-- Hugo -->" | safeHTML }}
+  {{ with site.Params.author }}
+  <meta name="author" content="{{ . }}" />
+  {{ end }}
+  {{ hugo.Generator }}
+
+  {{ "<!-- Tailwind CSS -->" | safeHTML }}
+  {{ $css := resources.Get "css/main.css" | postCSS }}
+  {{ if hugo.IsProduction }}
+    {{ $css = $css | minify | fingerprint }}
+  {{ end }}
+  <link rel="stylesheet" href="{{ $css.RelPermalink }}" />
+
+  {{ "<!--Favicon-->" | safeHTML }}
+  <link
+    rel="shortcut icon"
+    href="{{ `images/favicon.png` | absURL }} "
+    type="image/x-icon"
+  />
+  <link
+    rel="icon"
+    href="{{ `images/favicon.png` | absURL }} "
+    type="image/x-icon"
+  />
+
+  {{ with .Params.image }}
+  <meta property="og:image" content="{{ . | absURL }}" />
+  {{ end }}
+
+  {{ "<!-- Meta block -->" | safeHTML }}
+  {{- block "meta" . }}{{ end -}}
+
+  {{ template "_internal/opengraph.html" . }}
+  {{ template "_internal/google_analytics.html" . }}
+</head>

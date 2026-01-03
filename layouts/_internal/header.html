@@ -1,0 +1,243 @@
+<!-- navigation -->
+<header id="site-header" class="sticky top-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 shadow-2xl z-50 transition-all duration-500">
+  <div class="container mx-auto px-4">
+    <nav class="flex items-center justify-between py-4">
+      {{- block "header_left" . }}
+      <div class="flex items-center">
+        <a class="flex items-center gap-3 group" href="{{ site.BaseURL }}">
+          {{ if site.Params.logo }}
+          <div class="p-2 w-32">
+            <img
+              src="{{ site.Params.logo | absURL }}"
+              alt="{{ site.Title }}"
+              class="h-20 w-20 object-contain rounded-full"
+            />
+          </div>
+          {{ end }}
+          <div class="flex flex-col">
+            <span class="text-2xl md:text-3xl font-bold text-white tracking-tight leading-none">
+              {{ site.Params.headerTitle }}
+            </span>
+            <span class="text-xs md:text-sm text-white/80 font-medium uppercase tracking-wider">
+              {{ site.Params.headerSubtitle}}
+            </span>
+          </div>
+        </a>
+      </div>
+      {{ end }}
+
+      <!-- Mobile menu button -->
+      <button
+        class="lg:hidden p-2 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md transition-all duration-200 shadow-lg"
+        type="button"
+        onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+        aria-label="Toggle navigation"
+      >
+        <svg
+          class="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Desktop menu -->
+      <div class="hidden lg:flex items-center space-x-6">
+        {{- block "header_right" . }}
+        <!-- System Selector -->
+        {{- $systems := partial "get-systems.html" . -}}
+        {{- if gt (len $systems) 1 -}}
+        <div class="relative">
+          <label for="system-selector" class="sr-only">Select System</label>
+          <select
+            class="px-6 py-2.5 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-lg text-white font-semibold text-base focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer appearance-none pr-12"
+            id="system-selector"
+            onchange="window.location.search = '?system=' + this.value;"
+          >
+            {{ $currentSystem := "all" }}
+            {{ with .Params.system }}{{ $currentSystem = . }}{{ end }}
+            {{ range $systems }}
+            <option value="{{ .id }}" data-color="{{ .color }}" {{ if eq .id $currentSystem }}selected{{ end }}>
+              {{ .icon }} {{ .name }}
+            </option>
+            {{ end }}
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-white">
+            <svg class="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+            </svg>
+          </div>
+        </div>
+        <script>
+          // Pre-select system based on URL parameter and update header color
+          (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const systemParam = urlParams.get('system');
+            const selector = document.getElementById('system-selector');
+            const header = document.getElementById('site-header');
+
+            function updateHeaderColor() {
+              const selectedOption = selector.options[selector.selectedIndex];
+              const colorClasses = selectedOption.getAttribute('data-color');
+
+              if (colorClasses && header) {
+                // Get current classes as array
+                const currentClasses = Array.from(header.classList);
+
+                // Remove all gradient-related classes
+                currentClasses.forEach(cls => {
+                  if (cls.startsWith('from-') || cls.startsWith('via-') || cls.startsWith('to-')) {
+                    header.classList.remove(cls);
+                  }
+                });
+
+                // Add new gradient classes
+                const newClasses = colorClasses.split(' ');
+                newClasses.forEach(cls => {
+                  if (cls.trim()) {
+                    header.classList.add(cls);
+                  }
+                });
+              }
+            }
+
+            if (systemParam && selector) {
+              selector.value = systemParam;
+            } else if (selector && !systemParam) {
+              selector.value = 'all';
+            }
+
+            // Update header color on page load
+            if (selector) {
+              updateHeaderColor();
+
+              // Update header color when dropdown changes (before navigation)
+              selector.addEventListener('change', function() {
+                updateHeaderColor();
+              });
+            }
+          })();
+        </script>
+        {{- end -}}
+
+        <!-- Language List -->
+        {{- if .Site.Params.language.dropdown.enabled -}}
+        <select
+          class="px-4 py-2 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-lg text-white font-medium focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white/30 transition-all duration-200 shadow-lg cursor-pointer"
+          id="select-language"
+          onchange="location = this.value;"
+        >
+          {{ $siteLanguages := .Site.Languages }} {{ $pageLang := .Page.Lang }}
+          {{ range .Page.AllTranslations }} {{ $translation := . }} {{ range
+          $siteLanguages }} {{ if eq $translation.Lang .Lang }} {{ if eq
+          $pageLang .Lang }}
+          <option
+            id="{{ $translation.Language }}"
+            value="{{ $translation.Permalink | absLangURL | absURL }}"
+            selected
+          >
+            {{ .LanguageName }}
+          </option>
+          {{ else }}
+          <option
+            id="{{ $translation.Language }}"
+            value="{{ $translation.Permalink | absLangURL | absURL }}"
+          >
+            {{ .LanguageName }}
+          </option>
+          {{ end }} {{ end }} {{ end }} {{ end }}
+        </select>
+        {{- end -}} {{ end }}
+      </div>
+
+      <!-- Mobile System Selector -->
+      <div
+        id="mobile-menu"
+        class="hidden lg:hidden absolute top-20 left-0 right-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 shadow-2xl backdrop-blur-lg p-4"
+      >
+        {{- $systems := partial "get-systems.html" . -}}
+        {{- if gt (len $systems) 1 -}}
+        <div class="relative">
+          <label for="mobile-system-selector" class="block text-white font-semibold mb-2 text-sm uppercase tracking-wider">Select System</label>
+          <select
+            class="w-full px-4 py-3 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-lg text-white font-semibold focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white/30 transition-all duration-200 shadow-lg cursor-pointer appearance-none"
+            id="mobile-system-selector"
+            onchange="window.location.search = '?system=' + this.value;"
+          >
+            {{ $currentSystem := "all" }}
+            {{ with .Params.system }}{{ $currentSystem = . }}{{ end }}
+            {{ range $systems }}
+            <option value="{{ .id }}" data-color="{{ .color }}" {{ if eq .id $currentSystem }}selected{{ end }}>
+              {{ .icon }} {{ .name }}
+            </option>
+            {{ end }}
+          </select>
+          <div class="pointer-events-none absolute right-0 bottom-3 flex items-center px-3 text-white">
+            <svg class="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+            </svg>
+          </div>
+        </div>
+        <script>
+          // Pre-select system based on URL parameter for mobile and update header color
+          (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const systemParam = urlParams.get('system');
+            const selector = document.getElementById('mobile-system-selector');
+            const header = document.getElementById('site-header');
+
+            function updateHeaderColor() {
+              const selectedOption = selector.options[selector.selectedIndex];
+              const colorClasses = selectedOption.getAttribute('data-color');
+
+              if (colorClasses && header) {
+                // Get current classes as array
+                const currentClasses = Array.from(header.classList);
+
+                // Remove all gradient-related classes
+                currentClasses.forEach(cls => {
+                  if (cls.startsWith('from-') || cls.startsWith('via-') || cls.startsWith('to-')) {
+                    header.classList.remove(cls);
+                  }
+                });
+
+                // Add new gradient classes
+                const newClasses = colorClasses.split(' ');
+                newClasses.forEach(cls => {
+                  if (cls.trim()) {
+                    header.classList.add(cls);
+                  }
+                });
+              }
+            }
+
+            if (systemParam && selector) {
+              selector.value = systemParam;
+            } else if (selector && !systemParam) {
+              selector.value = 'all';
+            }
+
+            // Update header color on page load
+            if (selector) {
+              updateHeaderColor();
+
+              // Update header color when dropdown changes (before navigation)
+              selector.addEventListener('change', function() {
+                updateHeaderColor();
+              });
+            }
+          })();
+        </script>
+        {{- end -}}
+      </div>
+    </nav>
+  </div>
+</header>
+<!-- /navigation -->

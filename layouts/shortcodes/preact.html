@@ -1,0 +1,3 @@
+<!-- autoreload -->
+{{- $widget := (dict "js" (.Get "widget")) }} {{- $data := chomp .Inner -}} {{
+partial "preact.html" (dict "widget" $widget "data" $data) }}

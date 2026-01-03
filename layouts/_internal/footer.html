@@ -1,0 +1,63 @@
+{{ "<!-- Footer -->" | safeHTML }} {{- block "footer" . }}
+<footer id="portal-footer" class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 py-8 mt-auto transition-all duration-500">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col items-center space-y-3">
+      <div class="flex items-center gap-2 text-white/90">
+        <span class="text-2xl">🎮</span>
+        <span class="font-bold text-lg">Retro Gaming Collection</span>
+      </div>
+      <p class="text-center text-sm text-white/80 font-medium">
+        &copy; {{ replace .Site.Params.copyright "{year}" now.Year | markdownify }}
+      </p>
+      <p class="text-center text-xs text-white/60">
+        Powered by Hugo + Preact · Built with ❤️ for retro gaming enthusiasts
+      </p>
+    </div>
+  </div>
+</footer>
+<script>
+  // Sync footer color with header
+  (function() {
+    const header = document.getElementById('site-header');
+    const footer = document.getElementById('portal-footer');
+
+    if (header && footer) {
+      // Watch for header class changes
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.attributeName === 'class') {
+            syncFooterColor();
+          }
+        });
+      });
+
+      function syncFooterColor() {
+        // Get gradient classes from header
+        const currentClasses = Array.from(header.classList);
+        const gradientClasses = currentClasses.filter(cls =>
+          cls.startsWith('from-') || cls.startsWith('via-') || cls.startsWith('to-')
+        );
+
+        if (gradientClasses.length > 0) {
+          // Remove old gradient classes from footer
+          const footerClasses = Array.from(footer.classList);
+          footerClasses.forEach(cls => {
+            if (cls.startsWith('from-') || cls.startsWith('via-') || cls.startsWith('to-')) {
+              footer.classList.remove(cls);
+            }
+          });
+
+          // Add new gradient classes
+          gradientClasses.forEach(cls => footer.classList.add(cls));
+        }
+      }
+
+      observer.observe(header, { attributes: true });
+
+      // Initial sync
+      syncFooterColor();
+    }
+  })();
+</script>
+{{- end }} {{ "<!-- Javascript -->" | safeHTML }} {{- partial "javascript.html"
+. }} {{ "<!-- Inline JS -->" | safeHTML }} {{- block "inlinejs" . }}{{- end }}
