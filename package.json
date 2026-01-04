@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint ./assets/js",
     "lint:fix": "eslint ./assets/js --fix",
-    "dev": "run-p dev:**",
+    "dev": "vite build && run-p dev:**",
     "dev:vite-watch": "vite build --watch --mode development",
     "dev:hugo": "hugo serve -d public -vw --bind ${HUGO_BIND:-127.0.0.1} -p ${HUGO_PORT:-3001} --baseURL ${BASE_URL:-http://localhost:3001}",
     "start": "npm run dev",
