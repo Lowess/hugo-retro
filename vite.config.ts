@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
         manifest: false,
         rollupOptions: {
             input: {
-                romsWidget: resolve(assetsDir, 'js/romsWidget.tsx'),
+                romswidget: resolve(assetsDir, 'js/romswidget.tsx'),
             },
             output: {
                 entryFileNames: 'js/[name].js',
