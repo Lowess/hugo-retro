@@ -14,7 +14,7 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
     const [selectedGenre, setSelectedGenre] = useState('all');
     const [selectedPublisher, setSelectedPublisher] = useState('all');
     const [systemFilter, setSystemFilter] = useState('all');  // System filter within view
-    const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['fr', 'us']);  // Pre-selected FR and US
+    const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);  // Empty = all languages by default
     const [sortBy, setSortBy] = useState<'name' | 'releasedate' | 'rating'>('name');
     const [filterGradient, setFilterGradient] = useState('from-indigo-600 via-purple-600 to-pink-500');
     const [selectedRom, setSelectedRom] = useState<Roms | null>(null);
@@ -194,7 +194,7 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
         setSelectedGenre('all');
         setSelectedPublisher('all');
         setSystemFilter('all');
-        setSelectedLanguages(['fr', 'us']); // Reset to default FR and US
+        setSelectedLanguages([]); // Reset to all languages (empty = all)
         setSortBy('name');
     };
 
@@ -336,7 +336,7 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
                                             <input
                                                 type="checkbox"
                                                 checked={selectedLanguages.length === 0 || selectedLanguages.length === availableLanguages.length}
-                                                onChange={() => setSelectedLanguages(selectedLanguages.length === availableLanguages.length ? ['fr', 'us'] : availableLanguages)}
+                                                onChange={() => setSelectedLanguages(selectedLanguages.length === availableLanguages.length ? [] : availableLanguages)}
                                                 className="mr-3 w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
                                             />
                                             <span className="text-sm font-medium text-gray-700">🌍 All Regions</span>
