@@ -14,6 +14,7 @@ run:
 build:
 	export BASE_URL=$(URL)
 	npm run build
+	npm run postbuild
 
 test:
 	npm run test

@@ -13,8 +13,10 @@
     "dev:hugo": "hugo serve -d public -vw --bind ${HUGO_BIND:-127.0.0.1} -p ${HUGO_PORT:-3001} --baseURL ${BASE_URL:-http://localhost:3001} --appendPort=false",
     "start": "npm run dev",
     "preview": "hugo serve -d public --bind ${HUGO_BIND:-127.0.0.1} -p ${HUGO_PORT:-3001} --baseURL ${BASE_URL:-http://localhost:3001} --appendPort=false -D -F",
+    "clean:media": "node scripts/clean-media.js",
     "prebuild": "rm -rf public",
     "build": "vite build && hugo -d public -v -b ${BASE_URL:-/}",
+    "postbuild": "node scripts/link-media.js",
     "test": "jest"
   },
   "author": "",

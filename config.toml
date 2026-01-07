@@ -19,7 +19,7 @@ source = "static/images"
 target = "static/images"
 
 ### Hugo retro mounts - Multiple Systems
-# Default system (all ROMs)
+# Data only (gamelist.xml) - Media is linked via post-build script
 [[module.mounts]]
   source = '/Users/florian/Workspace/goretro'
   includeFiles = "gamelist.xml"
@@ -30,21 +30,16 @@ target = "static/images"
   includeFiles = "gamelist.xml"
   target = 'data/neogeo'
 
-# Add more systems here as needed
-# Example for SNES:
-# [[module.mounts]]
-#   source = '/path/to/snes/roms'
-#   includeFiles = "gamelist.xml"
-#   target = 'data/snes'
+# Media paths are NO LONGER mounted in Hugo (this speeds up builds significantly)
+# Instead, symlinks are created by scripts/link-media.js during post-build
+# See [params.mediaPaths] below for media source configuration
 
-# Mount each system's media to its own subdirectory to avoid conflicts
-[[module.mounts]]
-  source = '/Users/florian/Workspace/goretro/media'
-  target = 'static/media/snes'
-
-[[module.mounts]]
-  source = '/Users/florian/Documents/Roms/neogeo/roms/media'
-  target = 'static/media/neogeo'
+# Media paths for post-build symlink creation
+# These paths will be symlinked to public/media/{system} after build
+# This avoids copying large media directories during Hugo builds
+[params.mediaPaths]
+  snes = '/Users/florian/Workspace/goretro/media'
+  neogeo = '/Users/florian/Documents/Roms/neogeo/roms/media'
 
 ###################################### Navigation / Menu ######################################
 
