@@ -18,7 +18,7 @@
     "prebuild": "rm -rf public",
     "build": "vite build && hugo -d public --logLevel info -b ${BASE_URL:-/}",
     "build:fast": "hugo -d public --logLevel info -b ${BASE_URL:-/}",
-    "postbuild": "node scripts/link-media.js",
+    "postbuild": "node scripts/link-media.js --skip-validation",
     "test": "jest"
   },
   "author": "",

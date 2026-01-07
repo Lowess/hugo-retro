@@ -3,9 +3,9 @@
 /**
  * Post-build script to create symlinks for media directories
  * This avoids copying large media files during Hugo builds
- * 
+ *
  * Usage: node scripts/link-media.js [--skip-validation]
- * 
+ *
  * Options:
  *   --skip-validation  Skip checking if source paths exist (useful for CI/CD)
  */
@@ -23,10 +23,31 @@ const rootDir = path.resolve(__dirname, '..');
 const args = process.argv.slice(2);
 const skipValidation = args.includes('--skip-validation');
 
-// Read config.toml to get media paths
-const configPath = path.join(rootDir, 'config.toml');
-const configContent = fs.readFileSync(configPath, 'utf-8');
-const config = toml.parse(configContent);
+// Try to find config file in multiple locations
+const configPaths = [
+  path.join(rootDir, 'config/_default/hugo.toml'),
+  path.join(rootDir, 'config/hugo.toml'),
+  path.join(rootDir, 'config.toml'),
+];
+
+let config = null;
+let configPath = null;
+
+for (const tryPath of configPaths) {
+  if (fs.existsSync(tryPath)) {
+    configPath = tryPath;
+    const configContent = fs.readFileSync(tryPath, 'utf-8');
+    config = toml.parse(configContent);
+    console.log(`   📄 Using config: ${path.relative(rootDir, tryPath)}`);
+    break;
+  }
+}
+
+if (!config) {
+  console.error('❌ No config file found. Tried:');
+  configPaths.forEach(p => console.error(`   - ${path.relative(rootDir, p)}`));
+  process.exit(1);
+}
 
 // Get media configuration from params
 const mediaConfig = config.params?.mediaPaths || {};
@@ -58,6 +79,16 @@ for (const [systemId, sourcePath] of Object.entries(mediaConfig)) {
   const targetLink = path.join(mediaDir, systemId);
 
   try {
+    // Auto-append /media if path doesn't end with it
+    let actualSourcePath = sourcePath;
+    if (!sourcePath.endsWith('/media') && !sourcePath.endsWith('\\media')) {
+      const testMediaPath = path.join(sourcePath, 'media');
+      if (!skipValidation && fs.existsSync(testMediaPath)) {
+        actualSourcePath = testMediaPath;
+        console.log(`   💡 Using ${systemId}: ${actualSourcePath}`);
+      }
+    }
+
     // Remove existing symlink or directory if it exists
     if (fs.existsSync(targetLink)) {
       const stats = fs.lstatSync(targetLink);
@@ -71,21 +102,16 @@ for (const [systemId, sourcePath] of Object.entries(mediaConfig)) {
     }
 
     // Verify source path exists (unless skipping validation)
-    if (!skipValidation && !fs.existsSync(sourcePath)) {
-      console.error(`   ❌ Source path does not exist: ${sourcePath}`);
+    if (!skipValidation && !fs.existsSync(actualSourcePath)) {
+      console.error(`   ❌ Source path does not exist: ${actualSourcePath}`);
       console.error(`      💡 Use --skip-validation to skip this check`);
       errorCount++;
       continue;
     }
 
     // Create symlink
-    // Use relative path if possible for portability
-    const relativeSource = path.isAbsolute(sourcePath)
-      ? sourcePath
-      : path.relative(mediaDir, path.resolve(rootDir, sourcePath));
-
-    fs.symlinkSync(sourcePath, targetLink, 'dir');
-    console.log(`   ✓ Linked ${systemId} -> ${sourcePath}`);
+    fs.symlinkSync(actualSourcePath, targetLink, 'dir');
+    console.log(`   ✓ Linked ${systemId} -> ${actualSourcePath}`);
     successCount++;
 
   } catch (error) {
