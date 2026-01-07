@@ -7,6 +7,25 @@ defaultContentLanguage = "en"
 summarylength = "20" # post excert
 googleAnalytics = "" # Ex: UA-123-45
 
+# Performance optimizations
+timeout = "30s"  # Prevent hanging on slow I/O
+ignoreFiles = [
+  "\\.git/",
+  "node_modules/",
+  # Ignore all media files during build - we use symlinks instead
+  "/media/",
+  ".*\\.png$",
+  ".*\\.jpg$",
+  ".*\\.jpeg$",
+  ".*\\.gif$",
+  ".*\\.bmp$",
+  ".*\\.webp$",
+  # Ignore ROM files
+  ".*\\.zip$",
+  ".*\\.7z$",
+  ".*\\.rar$",
+]
+
 [outputs]
 page = ["HTML", "json"]
 section = ["HTML", "json"]

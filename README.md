@@ -119,30 +119,40 @@ The build process:
 
 ## 🐳 Unraid Deployment
 
-For detailed Unraid setup, see [UNRAID-SETUP.md](UNRAID-SETUP.md).
+### With Nginx Proxy Manager (Recommended)
+
+For detailed NPM setup, see [NPM-SETUP.md](NPM-SETUP.md).
 
 **Quick Start**:
 
 ```bash
-# Build the site
+# Build the site on Unraid (or sync from build machine)
 npm run build
 
-# Start Docker container
-docker-compose -f docker-compose.unraid.yml up -d
+# Serve with simple HTTP server
+cd public && python3 -m http.server 8080 &
+
+# Configure NPM proxy host (see NPM-SETUP.md)
 ```
+
+**Critical**: Add `disable_symlinks off;` to NPM's "Advanced" → "Custom Nginx Configuration"
+
+### With Docker/Nginx Container
+
+See [docker-compose.yml](docker-compose.yml) for full setup.
 
 **Key Points**:
 
-- ✅ Symlinks work with proper Docker volume mounts
-- ✅ Nginx configured to follow symlinks
+- ✅ Symlinks work with proper configuration
+- ✅ NPM or nginx configured to follow symlinks
 - ✅ No media duplication required
 - ✅ Direct access to your ROM volumes
 
 ## 📚 Documentation
 
-- **[UNRAID-SETUP.md](UNRAID-SETUP.md)** - Complete Unraid deployment guide
+- **[NPM-SETUP.md](NPM-SETUP.md)** - Nginx Proxy Manager setup for Unraid
 - **[scripts/README.md](scripts/README.md)** - Build scripts documentation
-- **[nginx.conf](nginx.conf)** - Production web server configuration
+- **[nginx-proxy-manager.conf](nginx-proxy-manager.conf)** - NPM custom configuration
 
 ## 🛠️ Available Commands
 

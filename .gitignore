@@ -59,6 +59,10 @@ $RECYCLE.BIN/
 .env.local
 .env.*.local
 
+# Local development config
+config.development.toml
+config.local.toml
+
 # Cache
 .cache/
 .temp/

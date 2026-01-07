@@ -3,8 +3,11 @@
 /**
  * Post-build script to create symlinks for media directories
  * This avoids copying large media files during Hugo builds
- *
- * Usage: node scripts/link-media.js
+ * 
+ * Usage: node scripts/link-media.js [--skip-validation]
+ * 
+ * Options:
+ *   --skip-validation  Skip checking if source paths exist (useful for CI/CD)
  */
 
 import fs from 'fs';
@@ -15,6 +18,10 @@ import toml from 'toml';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const skipValidation = args.includes('--skip-validation');
 
 // Read config.toml to get media paths
 const configPath = path.join(rootDir, 'config.toml');
@@ -28,6 +35,13 @@ const mediaDir = path.join(publicDir, 'media');
 
 console.log('🔗 Creating media symlinks...');
 console.log(`   Target directory: ${mediaDir}`);
+
+// Ensure public directory exists
+if (!fs.existsSync(publicDir)) {
+  console.log('   ⚠️  Public directory does not exist yet, skipping symlinks');
+  console.log('   💡 Run hugo build first, then symlinks will be created');
+  process.exit(0);
+}
 
 // Ensure media directory exists
 if (!fs.existsSync(mediaDir)) {
@@ -56,9 +70,10 @@ for (const [systemId, sourcePath] of Object.entries(mediaConfig)) {
       }
     }
 
-    // Verify source path exists
-    if (!fs.existsSync(sourcePath)) {
+    // Verify source path exists (unless skipping validation)
+    if (!skipValidation && !fs.existsSync(sourcePath)) {
       console.error(`   ❌ Source path does not exist: ${sourcePath}`);
+      console.error(`      💡 Use --skip-validation to skip this check`);
       errorCount++;
       continue;
     }
