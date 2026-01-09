@@ -1,0 +1,2 @@
+# This file ensures the production directory structure is preserved in git
+# Production-specific hugo.toml will be mounted here via Docker volume

@@ -60,7 +60,7 @@ $RECYCLE.BIN/
 .env.*.local
 
 # Local development config
-config.development.toml
+config/development/
 config.local.toml
 
 # Cache

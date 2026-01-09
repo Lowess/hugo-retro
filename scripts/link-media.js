@@ -25,9 +25,11 @@ const skipValidation = args.includes('--skip-validation');
 
 // Try to find config file in multiple locations
 const configPaths = [
-  path.join(rootDir, 'config/_default/hugo.toml'),
-  path.join(rootDir, 'config/hugo.toml'),
-  path.join(rootDir, 'config.toml'),
+  path.join(rootDir, 'config/development/hugo.toml'),  // Dev overrides first
+  path.join(rootDir, 'config/production/hugo.toml'),   // Production overrides
+  path.join(rootDir, 'config/_default/hugo.toml'),     // Base config
+  path.join(rootDir, 'config.toml'),                   // Legacy fallback
+  path.join(rootDir, 'hugo.toml'),                   // Legacy fallback
 ];
 
 let config = null;

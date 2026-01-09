@@ -7,25 +7,6 @@ defaultContentLanguage = "en"
 summarylength = "20" # post excert
 googleAnalytics = "" # Ex: UA-123-45
 
-# Performance optimizations
-timeout = "30s"  # Prevent hanging on slow I/O
-ignoreFiles = [
-  "\\.git/",
-  "node_modules/",
-  # Ignore all media files during build - we use symlinks instead
-  "/media/",
-  ".*\\.png$",
-  ".*\\.jpg$",
-  ".*\\.jpeg$",
-  ".*\\.gif$",
-  ".*\\.bmp$",
-  ".*\\.webp$",
-  # Ignore ROM files
-  ".*\\.zip$",
-  ".*\\.7z$",
-  ".*\\.rar$",
-]
-
 [outputs]
 page = ["HTML", "json"]
 section = ["HTML", "json"]
@@ -33,32 +14,25 @@ home = ["HTML", "json"]
 
 #################################### Plugins ##########################################
 
+# Mount static images (favicon, etc)
 [[module.mounts]]
-source = "static/images"
-target = "static/images"
+  source = "static/images"
+  target = "static/images"
 
 ### Hugo retro mounts - Multiple Systems
-# Data only (gamelist.xml) - Media is linked via post-build script
-[[module.mounts]]
-  source = '/Users/florian/Workspace/goretro'
-  includeFiles = "gamelist.xml"
-  target = 'data/snes'
-
-[[module.mounts]]
-  source = '/Users/florian/Documents/Roms/neogeo/roms'
-  includeFiles = "gamelist.xml"
-  target = 'data/neogeo'
-
-# Media paths are NO LONGER mounted in Hugo (this speeds up builds significantly)
-# Instead, symlinks are created by scripts/link-media.js during post-build
-# See [params.mediaPaths] below for media source configuration
-
-# Media paths for post-build symlink creation
-# These paths will be symlinked to public/media/{system} after build
-# This avoids copying large media directories during Hugo builds
-[params.mediaPaths]
-  snes = '/Users/florian/Workspace/goretro/media'
-  neogeo = '/Users/florian/Documents/Roms/neogeo/roms/media'
+# Data mounts and media paths should be configured in:
+# - config/_default/hugo.toml (this file - Unraid/production paths)
+# - config/development/hugo.toml (local dev overrides - Git ignored)
+#
+# Add your system mounts here for Unraid/production
+# Example:
+# [[module.mounts]]
+#   source = '/roms/snes'
+#   includeFiles = "gamelist.xml"
+#   target = 'data/snes'
+#
+# [params.mediaPaths]
+#   snes = '/roms/snes'  # Will auto-detect /media subdirectory
 
 ###################################### Navigation / Menu ######################################
 
