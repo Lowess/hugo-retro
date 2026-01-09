@@ -26,6 +26,8 @@ export interface System {
     id: string;
     name: string;
     icon: string;
+    gameCount?: number;
+    color?: string;
 }
 
 export default function useRoms({ system = "all" }: RomsRequestParams) {
@@ -35,21 +37,22 @@ export default function useRoms({ system = "all" }: RomsRequestParams) {
     useEffect(() => {
         setLoading(true);
 
-        // Fetch from systems/index.json which contains all systems and their games
-        fetch(`/systems/index.json`)
-            .then((res) => res.json())
-            .then((systems) => {
-                // Find the requested system
-                const selectedSystem = systems.find((s: any) => s.id === system);
-                if (selectedSystem && selectedSystem.games) {
-                    setData(selectedSystem.games);
-                } else {
-                    setData([]);
+        // Fetch individual system games from /systems/{system}/index.json
+        // This reduces payload size by only loading the selected system
+        fetch(`/systems/${system}/index.json`)
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch system: ${system}`);
                 }
+                return res.json();
+            })
+            .then((games) => {
+                setData(Array.isArray(games) ? games : []);
                 setLoading(false);
             })
             .catch((err) => {
-                console.error('Failed to load ROMs:', err);
+                console.error(`Failed to load ROMs for system "${system}":`, err);
+                setData([]);
                 setLoading(false);
             });
     }, [system]);
@@ -58,18 +61,35 @@ export default function useRoms({ system = "all" }: RomsRequestParams) {
 }
 
 export function useSystems() {
-    const [systems, setSystems] = useState<System[]>([
-        { id: "all", name: "All Systems", icon: "🎮" }
-    ]);
+    const [systems, setSystems] = useState<System[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Try to fetch systems from window config if available
-        // This can be populated by Hugo template
-        const hugoSystems = (window as any).__HUGO_SYSTEMS__;
-        if (hugoSystems && Array.isArray(hugoSystems)) {
-            setSystems(hugoSystems);
-        }
+        // Fetch systems list from /systems/index.json
+        // This is a lightweight endpoint with just system metadata
+        fetch('/systems/index.json')
+            .then((res) => res.json())
+            .then((systemsList) => {
+                // Map the systems list to include icon
+                const mappedSystems = systemsList.map((sys: any) => ({
+                    id: sys.id,
+                    name: sys.name,
+                    icon: sys.id === 'all' ? '🎮' : '🕹️',
+                    gameCount: sys.gameCount,
+                    color: sys.color
+                }));
+                setSystems(mappedSystems);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error('Failed to load systems:', err);
+                // Fallback to default
+                setSystems([
+                    { id: "all", name: "All Systems", icon: "🎮" }
+                ]);
+                setLoading(false);
+            });
     }, []);
 
-    return { systems };
+    return { systems, loading };
 }

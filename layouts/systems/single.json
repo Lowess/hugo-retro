@@ -1,0 +1,96 @@
+{{- /* Single system JSON output */ -}}
+{{- $systemId := .Params.systemId | default .File.BaseFileName -}}
+{{- $deduplicateEnabled := site.Params.deduplicateRoms | default false -}}
+
+{{- if eq $systemId "all" -}}
+  {{- /* Special case: all systems combined */ -}}
+  {{- $allGames := slice -}}
+  {{- $seenNames := dict -}}
+
+  {{- range $key, $value := site.Data -}}
+    {{- if isset $value "gamelist" -}}
+      {{- $gamelistData := index $value "gamelist" -}}
+      {{- if isset $gamelistData "game" -}}
+        {{- $originalGames := $gamelistData.game -}}
+        {{- range $originalGames -}}
+          {{- $game := . -}}
+          {{- $gameName := $game.name | lower -}}
+
+          {{- /* Check for duplicates if deduplication is enabled */ -}}
+          {{- $isDuplicate := false -}}
+          {{- if $deduplicateEnabled -}}
+            {{- if and (ne $gameName "") (isset $seenNames $gameName) -}}
+              {{- $isDuplicate = true -}}
+            {{- else -}}
+              {{- $seenNames = merge $seenNames (dict $gameName true) -}}
+            {{- end -}}
+          {{- end -}}
+
+          {{- if not $isDuplicate -}}
+            {{- /* Add system field to each game */ -}}
+            {{- $game = merge $game (dict "system" $key) -}}
+            {{- /* Fix image paths */ -}}
+            {{- if and (isset $game "image") (ne $game.image "") -}}
+              {{- $newImagePath := replace $game.image "media/" (printf "media/%s/" $key) -}}
+              {{- $game = merge $game (dict "image" $newImagePath) -}}
+            {{- end -}}
+            {{- if and (isset $game "thumbnail") (ne $game.thumbnail "") -}}
+              {{- $newThumbPath := replace $game.thumbnail "media/" (printf "media/%s/" $key) -}}
+              {{- $game = merge $game (dict "thumbnail" $newThumbPath) -}}
+            {{- end -}}
+            {{- $allGames = $allGames | append $game -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- $allGames | jsonify -}}
+
+{{- else -}}
+  {{- /* Single system */ -}}
+  {{- $games := slice -}}
+  {{- $seenNames := dict -}}
+
+  {{- if isset site.Data $systemId -}}
+    {{- $systemData := index site.Data $systemId -}}
+    {{- if isset $systemData "gamelist" -}}
+      {{- $gamelistData := index $systemData "gamelist" -}}
+      {{- if isset $gamelistData "game" -}}
+        {{- $originalGames := $gamelistData.game -}}
+        {{- range $originalGames -}}
+          {{- $game := . -}}
+          {{- $gameName := $game.name | lower -}}
+
+          {{- /* Check for duplicates if deduplication is enabled */ -}}
+          {{- $isDuplicate := false -}}
+          {{- if $deduplicateEnabled -}}
+            {{- if and (ne $gameName "") (isset $seenNames $gameName) -}}
+              {{- $isDuplicate = true -}}
+            {{- else -}}
+              {{- $seenNames = merge $seenNames (dict $gameName true) -}}
+            {{- end -}}
+          {{- end -}}
+
+          {{- if not $isDuplicate -}}
+            {{- /* Add system field to each game */ -}}
+            {{- $game = merge $game (dict "system" $systemId) -}}
+            {{- /* Fix image paths */ -}}
+            {{- if and (isset $game "image") (ne $game.image "") -}}
+              {{- $newImagePath := replace $game.image "media/" (printf "media/%s/" $systemId) -}}
+              {{- $game = merge $game (dict "image" $newImagePath) -}}
+            {{- end -}}
+            {{- if and (isset $game "thumbnail") (ne $game.thumbnail "") -}}
+              {{- $newThumbPath := replace $game.thumbnail "media/" (printf "media/%s/" $systemId) -}}
+              {{- $game = merge $game (dict "thumbnail" $newThumbPath) -}}
+            {{- end -}}
+            {{- $games = $games | append $game -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- $games | jsonify -}}
+
+{{- end -}}

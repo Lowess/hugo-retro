@@ -1,4 +1,4 @@
-{{- /* List all available systems */ -}}
+{{- /* Systems section index - lists all available systems */ -}}
 {{- $systems := slice -}}
 
 {{- range $key, $value := site.Data -}}
@@ -21,12 +21,22 @@
     {{- end -}}
   {{- end -}}
 
-  {{- $system := dict "id" $systemId "name" $systemName "gameCount" $gameCount -}}
+  {{- /* Get color theme if available */ -}}
+  {{- $color := "" -}}
+  {{- if isset site.Params.systemColors $systemId -}}
+    {{- $color = index site.Params.systemColors $systemId -}}
+  {{- end -}}
+
+  {{- $system := dict "id" $systemId "name" $systemName "gameCount" $gameCount "color" $color -}}
   {{- $systems = $systems | append $system -}}
 {{- end -}}
 
 {{- /* Add synthetic "all" system */ -}}
-{{- $allSystem := dict "id" "all" "name" "All Systems" -}}
+{{- $allColor := "" -}}
+{{- if isset site.Params.systemColors "all" -}}
+  {{- $allColor = index site.Params.systemColors "all" -}}
+{{- end -}}
+{{- $allSystem := dict "id" "all" "name" "All Systems" "color" $allColor -}}
 {{- $systems = slice $allSystem | append $systems -}}
 
 {{- $systems | jsonify -}}

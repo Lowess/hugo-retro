@@ -15,8 +15,8 @@
     "preview": "hugo serve -d public --bind ${HUGO_BIND:-127.0.0.1} -p ${HUGO_PORT:-3001} --baseURL ${BASE_URL:-http://localhost:3001} --appendPort=false -D -F",
     "clean:media": "node scripts/clean-media.js",
     "clean:all": "rm -rf public resources node_modules/.cache",
-    "prebuild": "rm -rf public",
-    "build": "vite build && hugo --environment production -d public --logLevel info -b ${BASE_URL:-/}",
+    "prebuild": "rm -rf public && node scripts/generate-system-pages.js",
+    "build": "vite build && hugo --configDir ${HUGO_CONFIG_DIR:-config} --environment production -d public --logLevel info -b ${BASE_URL:-/}",
     "build:fast": "hugo -d public --logLevel info -b ${BASE_URL:-/}",
     "postbuild": "node scripts/link-media.js --skip-validation",
     "test": "jest"
