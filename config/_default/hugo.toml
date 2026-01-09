@@ -1,0 +1,321 @@
+################################### Hugo General Configuration ############################
+
+baseURL = ""
+title = "The Retro Museum"
+defaultContentLanguage = "en"
+
+summarylength = "20" # post excert
+googleAnalytics = "" # Ex: UA-123-45
+
+[outputs]
+page = ["HTML", "json"]
+section = ["HTML", "json"]
+home = ["HTML", "json"]
+
+#################################### Plugins ##########################################
+
+# Mount static images (favicon, etc)
+[[module.mounts]]
+  source = "static/images"
+  target = "static/images"
+
+### Hugo retro mounts - Multiple Systems
+# Data mounts and media paths should be configured in:
+# - config/_default/hugo.toml (this file - Base configuration)
+# - config/development/hugo.toml (local dev overrides - Git ignored)
+# - config/production/hugo.toml (production overrides - Mounted in Docker)
+#
+# Production/development configs should add their system mounts like:
+# [[module.mounts]]
+#   source = '/roms/snes'
+#   includeFiles = "gamelist.xml"
+#   target = 'data/snes'
+#
+# [params.mediaPaths]
+#   snes = '/roms/snes'  # Will auto-detect /media subdirectory
+
+###################################### Navigation / Menu ######################################
+
+# Note: System selection is handled by the dropdown in the header
+
+########################### Default parameters ##########################
+[params]
+headerTitle = "The Retro Museum"
+headerSubtitle = "Preserving classic games"
+logo = "/images/favicon.png"
+description = "The Retro Museum"
+author = "Florian Dambrine"
+copyright = "{year}"
+
+# ROM Library Settings
+deduplicateRoms = true  # Remove duplicate ROMs based on name (keeps first occurrence)
+
+# System display names (ScreenScraper system IDs)
+# Based on common retro gaming platforms
+[params.systemNames]
+  all = "All Systems"
+
+  # Nintendo Home Consoles
+  nes = "Nintendo Entertainment System (NES)"
+  snes = "Super Nintendo (SNES)"
+  n64 = "Nintendo 64"
+  gamecube = "Nintendo GameCube"
+  wii = "Nintendo Wii"
+  wiiu = "Nintendo Wii U"
+  switch = "Nintendo Switch"
+  fds = "Famicom Disk System"
+  satellaview = "Satellaview"
+
+  # Nintendo Handhelds
+  gb = "Game Boy"
+  gbc = "Game Boy Color"
+  gba = "Game Boy Advance"
+  nds = "Nintendo DS"
+  3ds = "Nintendo 3DS"
+  virtualboy = "Virtual Boy"
+  pokemini = "Pokémon Mini"
+
+  # Sega Home Consoles
+  mastersystem = "Sega Master System"
+  genesis = "Sega Genesis / Mega Drive"
+  megadrive = "Sega Mega Drive"
+  megacd = "Sega CD / Mega-CD"
+  sega32x = "Sega 32X"
+  saturn = "Sega Saturn"
+  dreamcast = "Sega Dreamcast"
+  sg1000 = "SG-1000"
+
+  # Sega Handhelds
+  gamegear = "Sega Game Gear"
+
+  # Sony
+  psx = "PlayStation"
+  ps2 = "PlayStation 2"
+  ps3 = "PlayStation 3"
+  ps4 = "PlayStation 4"
+  ps5 = "PlayStation 5"
+  psp = "PlayStation Portable (PSP)"
+  psvita = "PlayStation Vita"
+
+  # Microsoft
+  xbox = "Xbox"
+  xbox360 = "Xbox 360"
+  xboxone = "Xbox One"
+  xboxseries = "Xbox Series X|S"
+
+  # Arcade
+  arcade = "Arcade"
+  mame = "MAME Arcade"
+  neogeo = "Neo Geo"
+  neogeocd = "Neo Geo CD"
+  cps1 = "CPS1 (Capcom Play System)"
+  cps2 = "CPS2 (Capcom Play System 2)"
+  cps3 = "CPS3 (Capcom Play System 3)"
+  atomiswave = "Atomiswave"
+  naomi = "Naomi"
+
+  # Atari
+  atari2600 = "Atari 2600"
+  atari5200 = "Atari 5200"
+  atari7800 = "Atari 7800"
+  atarijaguar = "Atari Jaguar"
+  atarijaguarcd = "Atari Jaguar CD"
+  atarilynx = "Atari Lynx"
+  atarist = "Atari ST"
+
+  # Other Consoles
+  colecovision = "ColecoVision"
+  intellivision = "Intellivision"
+  vectrex = "Vectrex"
+  odyssey2 = "Magnavox Odyssey 2"
+  channelf = "Fairchild Channel F"
+  astrocade = "Bally Astrocade"
+  pcengine = "PC Engine / TurboGrafx-16"
+  pcenginecd = "PC Engine CD / TurboGrafx-CD"
+  supergrafx = "SuperGrafx"
+  wonderswan = "WonderSwan"
+  wonderswancolor = "WonderSwan Color"
+  ngp = "Neo Geo Pocket"
+  ngpc = "Neo Geo Pocket Color"
+
+  # Computers
+  amiga = "Commodore Amiga"
+  amigacd32 = "Amiga CD32"
+  c64 = "Commodore 64"
+  vic20 = "Commodore VIC-20"
+  apple2 = "Apple II"
+  msx = "MSX"
+  msx2 = "MSX2"
+  zxspectrum = "ZX Spectrum"
+  amstradcpc = "Amstrad CPC"
+  dos = "DOS / PC"
+  pc = "Windows PC"
+  macintosh = "Macintosh"
+
+  # 3DO
+  3do = "3DO"
+
+  # Philips
+  cdimono1 = "Philips CD-i"
+
+  # Modern Handhelds
+  gizmondo = "Gizmondo"
+  ngage = "N-Gage"
+
+  # Retro Handhelds (Modern)
+  miyoo = "Miyoo Mini"
+  anbernic = "Anbernic"
+  steamdeck = "Steam Deck"
+
+# System color themes for header gradients
+# Format: "from-color via-color to-color"
+[params.systemColors]
+  all = "from-indigo-600 via-purple-600 to-pink-500"      # Default
+
+  # Nintendo Home Consoles
+  nes = "from-red-600 via-gray-600 to-red-700"           # NES red/gray
+  snes = "from-purple-600 via-violet-500 to-purple-400"  # SNES purple
+  n64 = "from-red-600 via-blue-600 to-green-600"         # N64 multicolor
+  gamecube = "from-purple-700 via-indigo-600 to-purple-800"  # GameCube purple
+  wii = "from-slate-100 via-blue-400 to-slate-200"       # Wii white/blue
+  wiiu = "from-cyan-500 via-blue-600 to-cyan-600"        # Wii U cyan/blue
+  switch = "from-red-600 via-gray-800 to-blue-600"       # Switch red/blue
+  fds = "from-yellow-600 via-orange-500 to-red-600"      # Famicom gold
+  satellaview = "from-gray-700 via-blue-500 to-gray-800" # Satellaview gray/blue
+
+  # Nintendo Handhelds
+  gb = "from-gray-500 via-green-600 to-gray-600"         # Game Boy green/gray
+  gbc = "from-purple-500 via-blue-500 to-teal-500"       # GBC colorful
+  gba = "from-indigo-500 via-purple-500 to-pink-500"     # GBA purple
+  nds = "from-slate-600 via-gray-700 to-slate-700"       # DS gray/silver
+  3ds = "from-cyan-500 via-blue-600 to-indigo-600"       # 3DS cyan/blue
+  virtualboy = "from-red-700 via-red-800 to-black"       # Virtual Boy red/black
+  pokemini = "from-yellow-400 via-blue-500 to-red-500"   # Pokémon colors
+
+  # Sega Home Consoles
+  mastersystem = "from-red-700 via-black to-red-800"     # Master System red/black
+  genesis = "from-slate-700 via-blue-600 to-slate-800"   # Genesis dark blue/black
+  megadrive = "from-slate-700 via-blue-600 to-slate-800" # Mega Drive
+  megacd = "from-blue-700 via-slate-800 to-blue-900"     # Sega CD blue/black
+  sega32x = "from-gray-700 via-red-600 to-black"         # 32X red/black
+  saturn = "from-gray-600 via-blue-700 to-gray-700"      # Saturn gray/blue
+  dreamcast = "from-orange-500 via-blue-600 to-gray-300" # Dreamcast orange/blue
+  sg1000 = "from-blue-700 via-black to-blue-800"         # SG-1000 blue/black
+
+  # Sega Handhelds
+  gamegear = "from-slate-800 via-red-600 to-blue-700"    # Game Gear black/red/blue
+
+  # Sony
+  psx = "from-slate-600 via-gray-700 to-slate-800"       # PlayStation gray
+  ps2 = "from-blue-900 via-black to-blue-950"            # PS2 black/blue
+  ps3 = "from-slate-800 via-black to-slate-900"          # PS3 black
+  ps4 = "from-blue-600 via-slate-900 to-blue-700"        # PS4 blue/black
+  ps5 = "from-white via-blue-500 to-black"               # PS5 white/blue/black
+  psp = "from-slate-900 via-gray-800 to-black"           # PSP black
+  psvita = "from-blue-600 via-slate-800 to-blue-700"     # Vita blue/black
+
+  # Microsoft
+  xbox = "from-green-600 via-black to-green-700"         # Xbox green/black
+  xbox360 = "from-green-500 via-gray-700 to-green-600"   # 360 green/gray
+  xboxone = "from-green-600 via-black to-gray-900"       # One green/black
+  xboxseries = "from-green-500 via-black to-green-600"   # Series X|S green/black
+
+  # Arcade
+  arcade = "from-yellow-500 via-orange-500 to-red-600"   # Arcade bright colors
+  mame = "from-yellow-500 via-red-600 to-purple-600"     # MAME colorful
+  neogeo = "from-blue-600 via-cyan-500 to-teal-500"      # Neo Geo blue/cyan
+  neogeocd = "from-blue-700 via-cyan-600 to-teal-600"    # Neo Geo CD
+  cps1 = "from-blue-600 via-purple-600 to-pink-600"      # Capcom blue/purple
+  cps2 = "from-purple-600 via-pink-600 to-red-600"       # Capcom purple/red
+  cps3 = "from-red-600 via-orange-600 to-yellow-600"     # Capcom red/orange
+  atomiswave = "from-cyan-500 via-blue-600 to-purple-600"  # Atomiswave
+  naomi = "from-orange-500 via-red-600 to-pink-600"      # Naomi
+
+  # Atari
+  atari2600 = "from-amber-700 via-orange-800 to-brown-900"  # 2600 wood grain
+  atari5200 = "from-gray-700 via-slate-800 to-gray-800"  # 5200 gray
+  atari7800 = "from-slate-700 via-gray-800 to-slate-800"  # 7800 gray/black
+  atarijaguar = "from-red-700 via-black to-red-800"      # Jaguar red/black
+  atarijaguarcd = "from-red-800 via-slate-900 to-black"  # Jaguar CD
+  atarilynx = "from-yellow-600 via-orange-600 to-red-600"  # Lynx yellow/orange
+  atarist = "from-gray-400 via-slate-500 to-gray-500"    # ST beige/gray
+
+  # Other Consoles
+  colecovision = "from-slate-800 via-gray-900 to-black"  # ColecoVision black
+  intellivision = "from-amber-800 via-brown-900 to-amber-900"  # Intellivision wood
+  vectrex = "from-slate-900 via-black to-slate-950"      # Vectrex black
+  odyssey2 = "from-slate-700 via-gray-800 to-slate-800"  # Odyssey 2 gray
+  channelf = "from-amber-700 via-orange-800 to-brown-800"  # Channel F
+  astrocade = "from-slate-800 via-gray-900 to-black"    # Astrocade
+  pcengine = "from-white via-orange-500 to-gray-300"     # PC Engine white/orange
+  pcenginecd = "from-white via-gray-400 to-orange-500"   # PC Engine CD
+  supergrafx = "from-slate-700 via-gray-800 to-slate-800"  # SuperGrafx
+  wonderswan = "from-slate-400 via-gray-500 to-slate-500"  # WonderSwan gray
+  wonderswancolor = "from-blue-400 via-purple-500 to-pink-500"  # WSC colorful
+  ngp = "from-slate-700 via-blue-800 to-slate-800"       # NGP gray/blue
+  ngpc = "from-blue-600 via-purple-600 to-pink-600"      # NGPC colorful
+
+  # Computers
+  amiga = "from-red-600 via-gray-700 to-blue-600"        # Amiga red/blue
+  amigacd32 = "from-slate-800 via-gray-900 to-black"     # CD32 black
+  c64 = "from-amber-700 via-brown-800 to-amber-800"      # C64 brown
+  vic20 = "from-amber-600 via-gray-700 to-amber-700"     # VIC-20
+  apple2 = "from-amber-600 via-green-700 to-amber-700"   # Apple II green
+  msx = "from-slate-700 via-gray-800 to-slate-800"       # MSX gray
+  msx2 = "from-slate-600 via-gray-700 to-slate-700"      # MSX2 gray
+  zxspectrum = "from-slate-800 via-black to-slate-900"   # ZX Spectrum black
+  amstradcpc = "from-slate-700 via-gray-800 to-slate-800"  # Amstrad gray
+  dos = "from-slate-800 via-gray-900 to-black"           # DOS black
+  pc = "from-blue-700 via-slate-800 to-blue-800"         # PC blue/gray
+  macintosh = "from-gray-200 via-slate-300 to-gray-300"  # Mac beige
+
+  # 3DO
+  3do = "from-slate-900 via-black to-slate-950"          # 3DO black
+
+  # Philips
+  cdimono1 = "from-gray-400 via-slate-500 to-gray-500"   # CD-i gray
+
+  # Modern Handhelds
+  gizmondo = "from-slate-700 via-gray-800 to-slate-800"  # Gizmondo
+  ngage = "from-slate-800 via-blue-800 to-slate-900"     # N-Gage
+  miyoo = "from-purple-600 via-pink-500 to-orange-500"   # Miyoo colorful
+  anbernic = "from-orange-500 via-red-600 to-purple-600" # Anbernic
+  steamdeck = "from-slate-700 via-blue-600 to-slate-800" # Steam Deck
+
+[params.maintenance]
+enable = false
+title = "Maintenance mode"
+message = "Coming back online soon..."
+image = "/images/preact.png"
+
+################################### Languages #####################################
+
+[params.language.dropdown]
+enabled = false
+
+################################### Security configs #####################################
+
+removePathAccents = true
+
+[markup.goldmark.renderer]
+unsafe = true
+
+[security]
+  enableInlineShortcodes = false
+  [security.exec]
+    allow = ['^dart-sass-embedded$', '^go$', '^npx$', '^postcss$', '^babel']
+    osEnv = ['(?i)^(PATH|PATHEXT|APPDATA|TMP|TEMP|TERM)$']
+
+  [security.funcs]
+    getenv = ['^HUGO_']
+
+  [security.http]
+    methods = ['(?i)GET|POST']
+    urls = ['.*']
+
+################################### Build configs #####################################
+
+[build]
+  noJSConfigInAssets = true
+  useResourceCacheWhen = 'fallback'
+  writeStats = false

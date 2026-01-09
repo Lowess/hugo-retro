@@ -27,7 +27,7 @@ if (!fs.existsSync(systemsContentDir)) {
   console.log('   ✓ Created systems content directory');
 }
 
-// Function to extract system IDs from config mounts
+// Function to extract system IDs from config (both mounts and systemNames)
 function getSystemsFromConfig(configPath) {
   if (!fs.existsSync(configPath)) return [];
 
@@ -36,6 +36,7 @@ function getSystemsFromConfig(configPath) {
     const config = toml.parse(configContent);
     const systems = new Set();
 
+    // Get systems from mounts
     if (config.module && config.module.mounts) {
       for (const mount of config.module.mounts) {
         // Check if target starts with 'data/'
@@ -44,6 +45,16 @@ function getSystemsFromConfig(configPath) {
           if (systemId) {
             systems.add(systemId);
           }
+        }
+      }
+    }
+
+    // Get systems from params.systemNames (includes all configured systems)
+    if (config.params && config.params.systemNames) {
+      for (const systemId of Object.keys(config.params.systemNames)) {
+        // Skip "all" as it's synthetic
+        if (systemId !== 'all') {
+          systems.add(systemId);
         }
       }
     }
@@ -58,20 +69,12 @@ function getSystemsFromConfig(configPath) {
 // Get systems from multiple sources
 let systems = [];
 
-// Try to get from data directory
-if (fs.existsSync(dataDir)) {
-  const dataSystems = fs.readdirSync(dataDir, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
-  systems.push(...dataSystems);
-  console.log(`   Found ${dataSystems.length} system(s) in data directory`);
-}
-
-// Also check config files for mounts
+// Check config files for all defined systems (prioritize _default for complete list)
 const configPaths = [
-  path.join(rootDir, 'config/development/hugo.toml'),
-  path.join(rootDir, 'config/production/hugo.toml'),
-  path.join(rootDir, 'config/_default/hugo.toml'),
+  path.join(rootDir, 'config/_default/hugo.toml'),    // Base config with all systems
+  path.join(rootDir, 'config/development/hugo.toml'), // Dev overrides
+  path.join(rootDir, 'config/production/hugo.toml'),  // Production overrides
+  path.join(rootDir, 'hugo.toml'),                    // Root config fallback
 ];
 
 for (const configPath of configPaths) {
@@ -79,6 +82,17 @@ for (const configPath of configPaths) {
   if (configSystems.length > 0) {
     console.log(`   Found ${configSystems.length} system(s) in ${path.relative(rootDir, configPath)}`);
     systems.push(...configSystems);
+  }
+}
+
+// Also check data directory for any additional systems
+if (fs.existsSync(dataDir)) {
+  const dataSystems = fs.readdirSync(dataDir, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+  if (dataSystems.length > 0) {
+    console.log(`   Found ${dataSystems.length} system(s) in data directory`);
+    systems.push(...dataSystems);
   }
 }
 
