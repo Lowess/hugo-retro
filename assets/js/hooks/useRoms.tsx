@@ -20,6 +20,7 @@ export interface Roms {
     image?: string;
     desc?: string;
     rating?: string;
+    favorite?: string;  // Recalbox favorite flag ("true" or "false")
 }
 
 export interface System {

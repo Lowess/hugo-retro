@@ -50,6 +50,9 @@ copyright = "{year}"
 # ROM Library Settings
 deduplicateRoms = true  # Remove duplicate ROMs based on name (keeps first occurrence)
 
+# GoRetro API Configuration
+goretroApiUrl = "http://localhost:8080"  # GoRetro API base URL (e.g., "http://localhost:8080")
+
 # System display names (ScreenScraper system IDs)
 # Based on common retro gaming platforms
 [params.systemNames]

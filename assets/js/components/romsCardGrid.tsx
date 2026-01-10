@@ -1,6 +1,7 @@
 import { h, Fragment } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import useRoms, { Roms, useSystems } from '../hooks/useRoms';
+import { getAllFavorites, toggleFavorite, isApiConfigured } from '../api/favorites';
 
 interface Props {
     initialSystem?: string;
@@ -19,6 +20,81 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
     const [filterGradient, setFilterGradient] = useState('from-indigo-600 via-purple-600 to-pink-500');
     const [selectedRom, setSelectedRom] = useState<Roms | null>(null);
     const [hoverColor, setHoverColor] = useState('purple-500');
+    const [showMoreFilters, setShowMoreFilters] = useState(false); // Toggle for advanced filters
+
+    // Favorites state
+    const [favorites, setFavorites] = useState<{ [system: string]: string[] }>({});
+    const [favoritesFilter, setFavoritesFilter] = useState(false); // Filter to show only favorites
+    const [apiConfigured, setApiConfigured] = useState(false);
+    const [favoriteTogglingMap, setFavoriteTogglingMap] = useState<{ [key: string]: boolean }>({});
+
+    // Load favorites on mount
+    useEffect(() => {
+        setApiConfigured(isApiConfigured());
+        if (isApiConfigured()) {
+            loadFavorites();
+        }
+    }, []);
+
+    const loadFavorites = async () => {
+        const allFavorites = await getAllFavorites();
+        setFavorites(allFavorites);
+    };
+
+    // Check if a ROM is favorited
+    const isFavorite = (rom: Roms): boolean => {
+        const system = rom.system || selectedSystem;
+        return favorites[system]?.includes(rom.name) || false;
+    };
+
+    // Handle favorite toggle
+    const handleToggleFavorite = async (rom: Roms, e: Event) => {
+        e.stopPropagation(); // Prevent modal from opening
+
+        const system = rom.system || selectedSystem;
+        const key = `${system}-${rom.name}`;
+
+        console.log('Toggle favorite:', { system, romName: rom.name, currentlyFavorite: isFavorite(rom) });
+
+        // Prevent multiple clicks
+        if (favoriteTogglingMap[key]) {
+            console.log('Already toggling, skipping...');
+            return;
+        }
+
+        setFavoriteTogglingMap(prev => ({ ...prev, [key]: true }));
+
+        const currentlyFavorite = isFavorite(rom);
+        const success = await toggleFavorite(system, rom.name, currentlyFavorite);
+
+        console.log('Toggle result:', { success });
+
+        if (success) {
+            // Update local favorites state
+            setFavorites(prev => {
+                const updated = { ...prev };
+                if (!updated[system]) {
+                    updated[system] = [];
+                }
+
+                if (currentlyFavorite) {
+                    // Remove from favorites
+                    updated[system] = updated[system].filter(name => name !== rom.name);
+                    console.log('Removed from favorites');
+                } else {
+                    // Add to favorites
+                    updated[system] = [...updated[system], rom.name];
+                    console.log('Added to favorites');
+                }
+
+                return updated;
+            });
+        } else {
+            console.error('Failed to toggle favorite');
+        }
+
+        setFavoriteTogglingMap(prev => ({ ...prev, [key]: false }));
+    };
 
     // Get system from URL parameter if available
     useEffect(() => {
@@ -157,7 +233,10 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
                 selectedLanguages.includes('all') ||
                 (rom.region && selectedLanguages.includes(rom.region.toLowerCase()));
 
-            return matchesSearch && matchesGenre && matchesPublisher && matchesSystem && matchesLanguage;
+            // Favorites filter
+            const matchesFavorite = !favoritesFilter || isFavorite(rom);
+
+            return matchesSearch && matchesGenre && matchesPublisher && matchesSystem && matchesLanguage && matchesFavorite;
         });
 
         // Sort
@@ -179,7 +258,7 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
         });
 
         return filtered;
-    }, [data, searchTerm, selectedGenre, selectedPublisher, systemFilter, selectedLanguages, sortBy]);
+    }, [data, searchTerm, selectedGenre, selectedPublisher, systemFilter, selectedLanguages, sortBy, favoritesFilter, favorites]);
 
     const formatReleaseDate = (dateStr?: string) => {
         if (!dateStr || dateStr.length !== 8) return 'Unknown';
@@ -196,6 +275,8 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
         setSystemFilter('all');
         setSelectedLanguages([]); // Reset to all languages (empty = all)
         setSortBy('name');
+        setFavoritesFilter(false); // Reset favorites filter
+        setShowMoreFilters(false); // Close advanced filters
     };
 
     // Handle language checkbox toggle
@@ -230,134 +311,48 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
                         {currentSystem.icon} {currentSystem.name}
                     </h2>
-                    <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                        Showing {filteredRoms.length} of {data?.length || 0} ROMs
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-sm font-semibold shadow-lg min-w-[140px] text-center">
+                            {filteredRoms.length} / {data?.length || 0} ROMs
+                        </div>
+                        {apiConfigured && (
+                            <button
+                                onClick={() => setFavoritesFilter(!favoritesFilter)}
+                                className={`px-4 py-2 rounded-full font-bold text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 min-w-[140px] ${
+                                    favoritesFilter
+                                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-yellow-500/50'
+                                        : 'bg-white/20 hover:bg-white/30 backdrop-blur-md border-2 border-white/40 hover:border-white/60'
+                                }`}
+                            >
+                                <span className="text-sm">{favoritesFilter ? '⭐' : '☆'}</span>
+                                <span>Favorites</span>
+                            </button>
+                        )}
+                        <button
+                            onClick={handleReset}
+                            className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md border-2 border-white/40 hover:border-white/60 rounded-full font-bold text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 min-w-[140px]"
+                        >
+                            <span>🔄</span>
+                            <span>Reset</span>
+                        </button>
                     </div>
                 </div>
 
-                {/* Filters Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+                {/* Primary Filters Row */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
                     {/* Search */}
-                    <div className="sm:col-span-2 lg:col-span-3 xl:col-span-2">
+                    <div>
                         <label htmlFor="search" className="block text-sm font-semibold mb-2 uppercase tracking-wide">
                             Search
                         </label>
                         <input
                             id="search"
                             type="text"
-                            placeholder="Search by name, description, or developer..."
+                            placeholder="Search games..."
                             value={searchTerm}
                             onInput={(e: any) => setSearchTerm(e.target.value)}
                             className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white transition-all duration-200 shadow-lg"
                         />
-                    </div>
-
-                    {/* System Filter (only show when viewing "All Systems") */}
-                    {selectedSystem === 'all' && availableSystems.length > 1 && (
-                        <div>
-                            <label htmlFor="systemFilter" className="block text-sm font-semibold mb-2 uppercase tracking-wide">
-                                System
-                            </label>
-                            <select
-                                id="systemFilter"
-                                value={systemFilter}
-                                onChange={(e: any) => setSystemFilter(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white transition-all duration-200 shadow-lg appearance-none cursor-pointer"
-                            >
-                                <option value="all">All Systems</option>
-                                {availableSystems.map(sys => {
-                                    const sysInfo = systems.find(s => s.id === sys);
-                                    return (
-                                        <option key={sys} value={sys}>
-                                            {sysInfo ? sysInfo.name : sys}
-                                        </option>
-                                    );
-                                })}
-                            </select>
-                        </div>
-                    )}
-
-                    {/* Genre Filter */}
-                    <div>
-                        <label htmlFor="genre" className="block text-sm font-semibold mb-2 uppercase tracking-wide">
-                            Genre
-                        </label>
-                        <select
-                            id="genre"
-                            value={selectedGenre}
-                            onChange={(e: any) => setSelectedGenre(e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white transition-all duration-200 shadow-lg appearance-none cursor-pointer"
-                        >
-                            <option value="all">All Genres</option>
-                            {genres.map(genre => (
-                                <option key={genre} value={genre}>{genre}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Publisher Filter */}
-                    <div>
-                        <label htmlFor="publisher" className="block text-sm font-semibold mb-2 uppercase tracking-wide">
-                            Publisher
-                        </label>
-                        <select
-                            id="publisher"
-                            value={selectedPublisher}
-                            onChange={(e: any) => setSelectedPublisher(e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white transition-all duration-200 shadow-lg appearance-none cursor-pointer"
-                        >
-                            <option value="all">All Publishers</option>
-                            {publishers.map(publisher => (
-                                <option key={publisher} value={publisher}>{publisher}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Language/Region Filter */}
-                    <div>
-                        <label className="block text-sm font-semibold mb-2 uppercase tracking-wide">
-                            Region/Language
-                        </label>
-                        <div className="relative">
-                            <details className="group">
-                                <summary className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-200 shadow-lg cursor-pointer list-none flex items-center justify-between">
-                                    <span className="text-sm">
-                                        {selectedLanguages.length === 0 ? 'All Regions' :
-                                         selectedLanguages.length === availableLanguages.length ? 'All Regions' :
-                                         `${selectedLanguages.length} selected`}
-                                    </span>
-                                    <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/>
-                                    </svg>
-                                </summary>
-                                <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-xl border-2 border-gray-200 max-h-60 overflow-y-auto">
-                                    <div className="p-2 space-y-1">
-                                        <label className="flex items-center px-3 py-2 hover:bg-gray-100 rounded cursor-pointer transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedLanguages.length === 0 || selectedLanguages.length === availableLanguages.length}
-                                                onChange={() => setSelectedLanguages(selectedLanguages.length === availableLanguages.length ? [] : availableLanguages)}
-                                                className="mr-3 w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700">🌍 All Regions</span>
-                                        </label>
-                                        {availableLanguages.map(lang => (
-                                            <label key={lang} className="flex items-center px-3 py-2 hover:bg-gray-100 rounded cursor-pointer transition-colors">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedLanguages.includes(lang)}
-                                                    onChange={() => handleLanguageToggle(lang)}
-                                                    className="mr-3 w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
-                                                />
-                                                <span className="text-sm text-gray-700">
-                                                    {languageNames[lang] || lang.toUpperCase()}
-                                                </span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            </details>
-                        </div>
                     </div>
 
                     {/* Sort By */}
@@ -371,22 +366,138 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
                             onChange={(e: any) => setSortBy(e.target.value as any)}
                             className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white transition-all duration-200 shadow-lg appearance-none cursor-pointer"
                         >
-                            <option value="name">Name</option>
+                            <option value="name">Name (A-Z)</option>
                             <option value="releasedate">Release Date</option>
                             <option value="rating">Rating</option>
                         </select>
                     </div>
-
-                    {/* Reset Button */}
-                    <div className="sm:col-span-2 lg:col-span-3 xl:col-span-1 flex items-end">
-                        <button
-                            onClick={handleReset}
-                            className="w-full px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md border-2 border-white/40 hover:border-white/60 rounded-lg font-bold uppercase tracking-wide text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
-                        >
-                            🔄 Reset
-                        </button>
-                    </div>
                 </div>
+
+                {/* More Filters Button Row */}
+                <div className="mb-4">
+                    <button
+                        onClick={() => setShowMoreFilters(!showMoreFilters)}
+                        className="w-full md:w-auto px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md border-2 border-white/40 hover:border-white/60 rounded-lg font-bold uppercase tracking-wide text-sm transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+                    >
+                        <svg className={`w-5 h-5 transition-transform ${showMoreFilters ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/>
+                        </svg>
+                        <span>{showMoreFilters ? 'Hide' : 'Show'} Advanced Filters</span>
+                    </button>
+                </div>
+
+                {/* Advanced Filters (Collapsible) */}
+                {showMoreFilters && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-white/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                        {/* System Filter (only show when viewing "All Systems") */}
+                        {selectedSystem === 'all' && availableSystems.length > 1 && (
+                            <div>
+                                <label htmlFor="systemFilter" className="block text-sm font-semibold mb-2 uppercase tracking-wide">
+                                    System
+                                </label>
+                                <select
+                                    id="systemFilter"
+                                    value={systemFilter}
+                                    onChange={(e: any) => setSystemFilter(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white transition-all duration-200 shadow-lg appearance-none cursor-pointer"
+                                >
+                                    <option value="all">All Systems</option>
+                                    {availableSystems.map(sys => {
+                                        const sysInfo = systems.find(s => s.id === sys);
+                                        return (
+                                            <option key={sys} value={sys}>
+                                                {sysInfo ? sysInfo.name : sys}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Genre Filter */}
+                        <div>
+                            <label htmlFor="genre" className="block text-sm font-semibold mb-2 uppercase tracking-wide">
+                                Genre
+                            </label>
+                            <select
+                                id="genre"
+                                value={selectedGenre}
+                                onChange={(e: any) => setSelectedGenre(e.target.value)}
+                                className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white transition-all duration-200 shadow-lg appearance-none cursor-pointer"
+                            >
+                                <option value="all">All Genres</option>
+                                {genres.map(genre => (
+                                    <option key={genre} value={genre}>{genre}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Publisher Filter */}
+                        <div>
+                            <label htmlFor="publisher" className="block text-sm font-semibold mb-2 uppercase tracking-wide">
+                                Publisher
+                            </label>
+                            <select
+                                id="publisher"
+                                value={selectedPublisher}
+                                onChange={(e: any) => setSelectedPublisher(e.target.value)}
+                                className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 focus:bg-white transition-all duration-200 shadow-lg appearance-none cursor-pointer"
+                            >
+                                <option value="all">All Publishers</option>
+                                {publishers.map(publisher => (
+                                    <option key={publisher} value={publisher}>{publisher}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Language/Region Filter */}
+                        <div>
+                            <label className="block text-sm font-semibold mb-2 uppercase tracking-wide">
+                                Region/Language
+                            </label>
+                            <div className="relative">
+                                <details className="group">
+                                    <summary className="w-full px-4 py-3 rounded-lg bg-white/95 text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-200 shadow-lg cursor-pointer list-none flex items-center justify-between">
+                                        <span className="text-sm">
+                                            {selectedLanguages.length === 0 ? 'All Regions' :
+                                             selectedLanguages.length === availableLanguages.length ? 'All Regions' :
+                                             `${selectedLanguages.length} selected`}
+                                        </span>
+                                        <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/>
+                                        </svg>
+                                    </summary>
+                                    <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-xl border-2 border-gray-200 max-h-60 overflow-y-auto">
+                                        <div className="p-2 space-y-1">
+                                            <label className="flex items-center px-3 py-2 hover:bg-gray-100 rounded cursor-pointer transition-colors">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedLanguages.length === 0 || selectedLanguages.length === availableLanguages.length}
+                                                    onChange={() => setSelectedLanguages(selectedLanguages.length === availableLanguages.length ? [] : availableLanguages)}
+                                                    className="mr-3 w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+                                                />
+                                                <span className="text-sm font-medium text-gray-700">🌍 All Regions</span>
+                                            </label>
+                                            {availableLanguages.map(lang => (
+                                                <label key={lang} className="flex items-center px-3 py-2 hover:bg-gray-100 rounded cursor-pointer transition-colors">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedLanguages.includes(lang)}
+                                                        onChange={() => handleLanguageToggle(lang)}
+                                                        className="mr-3 w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+                                                    />
+                                                    <span className="text-sm text-gray-700">
+                                                        {languageNames[lang] || lang.toUpperCase()}
+                                                    </span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Cards Grid */}
@@ -418,11 +529,20 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
                                         <span className="text-white/70 font-bold text-lg uppercase tracking-wider">No Image</span>
                                     </div>
                                 )}
-                                {rom.rating && parseFloat(rom.rating) > 0 && (
-                                    <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg">
-                                        <span className="text-yellow-400">⭐</span>
-                                        <span>{rom.rating}</span>
-                                    </div>
+                                {/* Favorite Button - Top Right */}
+                                {apiConfigured && (
+                                    <button
+                                        onClick={(e) => handleToggleFavorite(rom, e)}
+                                        className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 ${
+                                            isFavorite(rom)
+                                                ? 'bg-yellow-500/90 text-white shadow-lg shadow-yellow-500/50'
+                                                : 'bg-black/70 text-white/70 hover:text-white hover:bg-black/80'
+                                        }`}
+                                        disabled={favoriteTogglingMap[`${rom.system || selectedSystem}-${rom.name}`]}
+                                        title={isFavorite(rom) ? 'Remove from favorites' : 'Add to favorites'}
+                                    >
+                                        <span className="text-xl">{isFavorite(rom) ? '⭐' : '☆'}</span>
+                                    </button>
                                 )}
                             </div>
 
@@ -443,6 +563,11 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
                                     {rom.region && (
                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-300 shadow-md border border-gray-600">
                                             {rom.region.toUpperCase()}
+                                        </span>
+                                    )}
+                                    {rom.rating && parseFloat(rom.rating) > 0 && (
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400 shadow-md border border-yellow-500/30">
+                                            ⭐ {rom.rating}
                                         </span>
                                     )}
                                 </div>
@@ -512,15 +637,38 @@ const RomsCardGrid = ({ initialSystem = 'all' }: Props) => {
                                     )}
                                 </div>
                             </div>
-                            <button
-                                onClick={() => setSelectedRom(null)}
-                                className="ml-4 p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
-                                aria-label="Close modal"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+                            <div className="flex items-center gap-2 ml-4">
+                                {/* Favorite Button in Modal */}
+                                {apiConfigured && (
+                                    <button
+                                        onClick={(e) => handleToggleFavorite(selectedRom, e)}
+                                        className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
+                                            isFavorite(selectedRom)
+                                                ? 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg shadow-yellow-500/50'
+                                                : 'bg-gray-700 hover:bg-gray-600 text-white/70 hover:text-white'
+                                        }`}
+                                        disabled={favoriteTogglingMap[`${selectedRom.system || selectedSystem}-${selectedRom.name}`]}
+                                        title={isFavorite(selectedRom) ? 'Remove from favorites' : 'Add to favorites'}
+                                    >
+                                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                            {isFavorite(selectedRom) ? (
+                                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                            ) : (
+                                                <path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z"/>
+                                            )}
+                                        </svg>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setSelectedRom(null)}
+                                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                                    aria-label="Close modal"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         {/* Modal Body */}
