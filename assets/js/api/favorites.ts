@@ -1,10 +1,20 @@
 // Favorites API client for GoRetro
 
-const getApiUrl = (): string => {
-    if (typeof window !== 'undefined' && (window as any).__HUGO_CONFIG__) {
-        return (window as any).__HUGO_CONFIG__.goretroApiUrl || '';
+interface GoRetroConfig {
+    enabled: boolean;
+    endpoint: string;
+}
+
+const getGoRetroConfig = (): GoRetroConfig => {
+    if (typeof window !== 'undefined' && (window as any).__HUGO_CONFIG__?.goretro) {
+        return (window as any).__HUGO_CONFIG__.goretro;
     }
-    return '';
+    return { enabled: false, endpoint: '' };
+};
+
+const getApiUrl = (): string => {
+    const config = getGoRetroConfig();
+    return config.enabled ? config.endpoint : '';
 };
 
 export interface FavoritesResponse {

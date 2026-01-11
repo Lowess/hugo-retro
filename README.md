@@ -14,6 +14,7 @@ A beautiful, modern web interface for browsing your retro game ROM collections. 
 - ⚡ **Fast** - Optimized builds with symlinked media (10-100x faster)
 - 🖼️ **Rich Media** - Display game screenshots, metadata, ratings
 - 🎯 **Smart Deduplication** - Automatically removes duplicate ROMs
+- ⭐ **GoRetro Integration** - Optional favorites and dynamic features (requires [GoRetro API](https://github.com/Lowess/goretro))
 - 🚀 **Unraid Ready** - Optimized for Unraid deployments
 
 ## 🚀 Quick Start
@@ -94,6 +95,23 @@ Add media paths for optimized builds:
   snes = "from-purple-600 via-violet-500 to-purple-400"
   neogeo = "from-blue-600 via-cyan-500 to-teal-500"
 ```
+
+### 5. GoRetro API Integration (Optional)
+
+Enable favorites and dynamic features by connecting to a GoRetro API server:
+
+```toml
+[params.goretro]
+  enabled = true
+  endpoint = "http://localhost:8080"  # GoRetro API base URL
+```
+
+**Features**:
+
+- ⭐ **Favorites** - Mark and filter favorite ROMs
+- 🔄 **Dynamic Updates** - Real-time ROM library updates
+
+When disabled (`enabled = false`), the site works as a static ROM browser without API features.
 
 ## 📦 Build Process
 
