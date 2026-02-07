@@ -41,6 +41,17 @@
   <meta property="og:image" content="{{ . | absURL }}" />
   {{ end }}
 
+  {{ "<!-- GoRetro API Configuration -->" | safeHTML }}
+  <script>
+    window.__HUGO_CONFIG__ = {
+      goretro: {
+        enabled: {{ site.Params.goretro.enabled }},
+        endpoint: {{ site.Params.goretro.endpoint | jsonify }},
+        token: {{ site.Params.goretro.token | default "" | jsonify }}
+      }
+    };
+  </script>
+
   {{ "<!-- Meta block -->" | safeHTML }}
   {{- block "meta" . }}{{ end -}}
 

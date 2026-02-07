@@ -54,6 +54,7 @@ deduplicateRoms = true  # Remove duplicate ROMs based on name (keeps first occur
 [params.goretro]
 enabled = false
 endpoint = "http://localhost:8080"  # GoRetro API base URL (e.g., "http://localhost:8080")
+token = ""  # Bearer token for API authentication (e.g., "your-secret-token")
 
 # System display names (ScreenScraper system IDs)
 # Based on common retro gaming platforms
