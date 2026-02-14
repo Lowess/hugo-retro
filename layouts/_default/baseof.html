@@ -3,15 +3,6 @@
   {{- template "_internal/head.html" . -}}
 
   <body id="body" class="flex flex-col min-h-screen bg-gray-950">
-    <script>
-      // Global configuration for frontend
-      window.__HUGO_CONFIG__ = {
-        goretro: {
-          enabled: {{ site.Params.goretro.enabled | default false }},
-          endpoint: "{{ site.Params.goretro.endpoint | default "" }}"
-        }
-      };
-    </script>
     {{ if .Site.Params.maintenance.enable }} {{- partial "maintenance.html" .
     -}} {{ else }} {{- template "_internal/header.html" . -}}
 
