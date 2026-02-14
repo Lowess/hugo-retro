@@ -6,9 +6,31 @@ interface GoRetroConfig {
     token: string;
 }
 
+const normalizeConfigValue = (value: unknown): string => {
+    if (typeof value !== 'string') {
+        return '';
+    }
+
+    const trimmed = value.trim();
+    if (trimmed.length >= 2) {
+        const first = trimmed[0];
+        const last = trimmed[trimmed.length - 1];
+        if ((first === '"' && last === '"') || (first === '\'' && last === '\'')) {
+            return trimmed.slice(1, -1).trim();
+        }
+    }
+
+    return trimmed;
+};
+
 const getGoRetroConfig = (): GoRetroConfig => {
     if (typeof window !== 'undefined' && (window as any).__HUGO_CONFIG__?.goretro) {
-        return (window as any).__HUGO_CONFIG__.goretro;
+        const raw = (window as any).__HUGO_CONFIG__.goretro;
+        return {
+            enabled: Boolean(raw.enabled),
+            endpoint: normalizeConfigValue(raw.endpoint),
+            token: normalizeConfigValue(raw.token),
+        };
     }
     return { enabled: false, endpoint: '', token: '' };
 };
